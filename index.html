@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset = "utf-8"/>
+    <title>Gamedev Canvas Workshop</title>
+    <style>
+      * { padding : 0 ; margin: 0;}
+      canvas { background: #eee; display: block; margin: 0 auto;}
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="480" height="320"></canvas>
+
+<script>
+  //Javascript
+  var canvas = document.getElementById('myCanvas');
+  var ctx = canvas.getContext("2d"); // 캔버스에 그리기 위해 실질적으로 사용되는 도구인 2D rendering context
+
+
+/**
+lesson1
+  canvas 그림 그리기 beginPath~ closePath 사이에 모든 명령어가 들어감
+  ctx.beginPath(); //그림 시작
+  ctx.rect(20,40,50,50);// rect(x,y,width, height)
+  ctx.fillStyle = "#FF0000"; // 색칠할 색 지정
+  ctx.fill(); // 색칠
+  ctx.closePath(); //그림 끝(도형 하나 완성)
+*/
+
+var y = canvas.height-30; //화면 하단에
+var x = canvas.width/2; //화면 중간에
+// x, y의 움직임을 표현하기 위한 값
+var dx = -2;
+var dy = -2;
+var color = ["red", "blue", "green", "#0095DD" ];
+var ballRadius = 10;// 원의 반지름 값
+var ballColor = "#0095DD";
+//Bar의 속성
+var paddleHeight = 10;
+var paddleWidth = 75;
+var paddleX = (canvas.width - paddleWidth)/2 ;
+
+var rightPressed = false; //오른쪽 눌렸을 때
+var leftPressed = false; //왼쪽 눌렸을 때
+
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+function keyDownHandler(e){ //키보드 눌렀을 때
+  if(e.keyCode == 39){
+    rightPressed = true; //오른쪽으로 쭉 상태 지속
+
+  }else if(e.keyCode == 37){
+    leftPressed = true; //왼쪽 지속
+  }
+}
+
+function keyUpHandler(e){
+  if(e.keyCode == 39){
+    rightPressed = false;
+
+  }else if(e.keyCode == 37){
+    leftPressed = false;
+  }
+}
+
+function drawPaddle(){
+  ctx.beginPath();
+  ctx.rect(paddleX, canvas.height- paddleHeight, paddleWidth, paddleHeight);
+  ctx.fillStyle = ballColor;
+  ctx.fill();
+  ctx.closePath();
+}
+
+function drawball(){
+  ctx.beginPath();
+  ctx.arc(x,y,ballRadius,0,Math.PI * 2);
+  ctx.fillStyle = ballColor;
+  ctx.fill();
+  ctx.closePath();
+
+}
+function changeBall(){
+    ballColor = color[Math.floor(Math.random() * 4) ];
+}
+function draw(){
+  //drawing code
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // 전에 찍힌 draw 지워주기
+  drawPaddle();
+  drawball();
+  if(y + dy < ballRadius){ //바닥에 닿을 경우
+    dy = - dy;
+    changeBall();
+  }
+
+  if(y + dy > canvas.height - ballRadius){ //천장에 닿을 경우
+      dy = -dy;
+      changeBall();
+  }
+
+  if(x + dx < ballRadius){ //왼쪽에 닿을 경우
+    dx = - dx;
+    changeBall();
+  }
+
+  if(x + dx > canvas.width- ballRadius){ //오른쪽에 닿을 경우
+      dx = -dx;
+      changeBall();
+  }
+  /*
+  //위의 코드 리팩토링
+if(x + dx > canvas.width || x + dx < 0) {
+    dx = -dx;
+}
+
+if(y + dy > canvas.height || y + dy < 0) {
+    dy = -dy;
+}
+  */
+  //페달 이동 시
+  if(rightPressed) {
+    paddleX += 10; //오른쪽 버튼 누를 경우 가는 칸
+  }else if(leftPressed) {
+      paddleX -= 10; //왼쪽 버튼
+  }
+
+  x += dx;
+  y += dy;
+}
+
+
+
+
+
+setInterval(draw, 10); // Javascript 타이밍 함수 = requestAnimationFrame()와 같은 종류, 무한히 작동함 10밀리초마다
+
+
+
+
+
+</script>
+
+</body>
+<html>
