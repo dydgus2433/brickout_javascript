@@ -43,9 +43,81 @@ var paddleX = (canvas.width - paddleWidth)/2 ;
 
 var rightPressed = false; //오른쪽 눌렸을 때
 var leftPressed = false; //왼쪽 눌렸을 때
+//벽돌  속성
+var brickRowCount = 3; //벽돌 줄 수
+var brickColumnCount = 5; //벽돌 칸 수
+var brickWidth = 75; //벽돌의 넓이
+var brickHeight = 10; //벽돌의 높이
+var brickPadding = 10; //벽돌 사이의 간격
+var brickOffsetTop = 30; //벽돌과 천장의 간격
+var brickOffsetLeft = 30; //벽돌과 왼쪽 벽의 간격
+
+var brickStatus = 1; // 벽돌의 경도
+
+//점수
+var score = 0;
+var brickOutPoint = 5;
+
+//목숨
+var lives = 3;
+
+function drawLives() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+}
+
+function drawScore(){
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText("Score : "+ score,8 , 20);
+}
+
+
+var bricks = []; //벽돌을 그리기 위한 배열
+for( c = 0; c< brickColumnCount; c++ ){ //지정한 수의 칸 수만큼
+  bricks[c] = [];
+  for(  r =0; r< brickRowCount; r++){ // 지정한 수의 줄 수 만큼
+    bricks[c][r] = { x: 0, y: 0, status: brickStatus }; //벽돌의 상태값을 1로 정해준다
+  }
+}
+function drawBricks(){
+  for( c = 0; c< brickColumnCount; c++ ){
+    for(  r =0; r< brickRowCount; r++){
+      if(bricks[c][r].status > 0) {
+        var brickX = (c*(brickWidth + brickPadding)) + brickOffsetLeft; //벽돌이 생성되는 x좌표
+        var brickY = (r*(brickHeight + brickPadding)) + brickOffsetTop; //벽돌의 생성되는 y좌표
+        //벽돌의 x,y좌표 지정
+        bricks[c][r].x = brickX;
+        bricks[c][r].y = brickY;
+
+        ctx.beginPath();
+        ctx.rect(brickX,brickY, brickWidth, brickHeight);
+        ctx.fillStyle =  "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
+  }
+}
+
+
+
+
+
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("mousemove",mouseMoveHandler, false);
+
+function mouseMoveHandler(e){
+  var relativeX = e.clientX - canvas.offsetLeft; //뷰포트의 수평 마우스 위치 (e.clientX)
+  //relativeX : 캔바스의 왼쪽 가장자리와 마우스 포인터 사이의 거리와 같습니다
+  if(relativeX > 0 && relativeX < canvas.width){
+    paddleX = relativeX - paddleWidth /2;
+  }
+}
+
 function keyDownHandler(e){ //키보드 눌렀을 때
   if(e.keyCode == 39){
     rightPressed = true; //오른쪽으로 쭉 상태 지속
@@ -63,6 +135,35 @@ function keyUpHandler(e){
     leftPressed = false;
   }
 }
+
+function collisionDetection(){ //충돌 감지 기능
+  for( c= 0; c< brickColumnCount; c++){
+    for( r=0; r < brickRowCount; r++){
+      var b = bricks[c][r];
+      /*
+       코드의 가독성을 높이기 위해 충돌 탐지의 모든 루프에
+      brick객체를 저장하기 위한 b변수 정의 b = 블록 각각의 객체
+      */
+      //calculations
+      if(b.status > 0) {
+        if(x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight){
+          dy = - dy;
+          b.status--;
+          if(b.status == 0){
+            score+=brickOutPoint;
+            if(score == brickRowCount * brickColumnCount * brickOutPoint){ //이렇게 하면 처음부터 0인 경우는 어떻게 하지
+              alert("You Win! Your Score : "+score);
+
+               document.location.reload();
+            }
+          }
+          changeBall();
+        }
+      }
+    }
+  }
+}
+
 
 function drawPaddle(){
   ctx.beginPath();
@@ -86,16 +187,33 @@ function changeBall(){
 function draw(){
   //drawing code
   ctx.clearRect(0, 0, canvas.width, canvas.height); // 전에 찍힌 draw 지워주기
-  drawPaddle();
-  drawball();
+  drawScore(); // 점수 보여주는 함수
+  drawBricks(); //벽돌
+  drawPaddle(); // 패들
+  drawball(); //공
+  collisionDetection(); //벽돌 충돌 시 함수
+  drawLives();
+
   if(y + dy < ballRadius){ //바닥에 닿을 경우
     dy = - dy;
-    changeBall();
-  }
+    changeBall(); //공 색깔 바꾸기
+  }else if(y + dy > canvas.height - ballRadius){ //천장에 닿을 경우
+      if(x > paddleX && x < paddleX + paddleWidth) {//공이 패들에 닿았을 경우
+          dy = -dy;
+      }else { //공이 바닥에 닿았을 경우
+        lives--;
+        if(!lives){
+          alert("Game Over! Your Score : "+score);
+          document.location.reload();
+        }else{
+          x = canvas.width/2;
+          y = canvas.height-30;
+          dx = 2;
+          dy = -2;
+          paddleX = (canvas.width-paddleWidth)/2;
+        }
 
-  if(y + dy > canvas.height - ballRadius){ //천장에 닿을 경우
-      dy = -dy;
-      changeBall();
+      }
   }
 
   if(x + dx < ballRadius){ //왼쪽에 닿을 경우
@@ -118,21 +236,23 @@ if(y + dy > canvas.height || y + dy < 0) {
 }
   */
   //페달 이동 시
-  if(rightPressed) {
-    paddleX += 10; //오른쪽 버튼 누를 경우 가는 칸
-  }else if(leftPressed) {
-      paddleX -= 10; //왼쪽 버튼
+  if(rightPressed && paddleX < canvas.width-paddleWidth) {
+    paddleX += 7; //오른쪽 버튼 누를 경우 가는 칸
+  }else if(leftPressed && paddleX > 0) {
+      paddleX -= 7; //왼쪽 버튼
   }
 
   x += dx;
   y += dy;
+  //setInterval(draw, 10); // Javascript 타이밍 함수 = requestAnimationFrame()와 같은 종류, 무한히 작동함 10밀리초마다
+
+  requestAnimationFrame(draw);
 }
 
 
 
+draw();
 
-
-setInterval(draw, 10); // Javascript 타이밍 함수 = requestAnimationFrame()와 같은 종류, 무한히 작동함 10밀리초마다
 
 
 
