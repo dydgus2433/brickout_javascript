@@ -37,6 +37,33 @@ var brickPadding = 10; //벽돌 사이의 간격
 var brickOffsetTop = 30; //벽돌과 천장의 간격
 var brickOffsetLeft = 30; //벽돌과 왼쪽 벽의 간격
 
+function init(){
+  y = canvas.height-30; //화면 하단에
+  x = canvas.width/2; //화면 중간에
+  // x, y의 움직임을 표현하기 위한 값
+  dx = -2;
+  dy = -2;
+
+  ballRadius = 10;// 원의 반지름 값
+  ballColor = "#0095DD";
+  //Bar의 속성
+  paddleHeight = 10;
+  paddleWidth = 75;
+  paddleX = (canvas.width - paddleWidth)/2 ;
+
+  rightPressed = false; //오른쪽 눌렸을 때
+  leftPressed = false; //왼쪽 눌렸을 때
+  //벽돌  속성
+  brickRowCount = 3; //벽돌 줄 수
+  brickColumnCount = 5; //벽돌 칸 수
+  brickWidth = 75; //벽돌의 넓이
+  brickHeight = 10; //벽돌의 높이
+  brickPadding = 10; //벽돌 사이의 간격
+  brickOffsetTop = 30; //벽돌과 천장의 간격
+  brickOffsetLeft = 30; //벽돌과 왼쪽 벽의 간격
+}
+
+
 var brickStatus = 1; // 벽돌의 경도
 
 //점수
@@ -131,6 +158,22 @@ if(e.keyCode == 39){
 }
 }
 
+function initBricks(stage){
+  for( c= 0; c< brickColumnCount; c++){
+    for( r=0; r < brickRowCount; r++){
+        var b = bricks[c][r];
+        b.status = stage;
+    }
+  }
+}
+function initPaddle(){
+
+}
+
+function initBall(){
+
+}
+
 function collisionDetection(){ //충돌 감지 기능
 for( c= 0; c< brickColumnCount; c++){
   for( r=0; r < brickRowCount; r++){
@@ -146,10 +189,13 @@ for( c= 0; c< brickColumnCount; c++){
         b.status--;
         if(b.status == 0){
           score+=brickOutPoint;
-          if(score == brickRowCount * brickColumnCount * brickOutPoint){ //이렇게 하면 처음부터 0인 경우는 어떻게 하지
+          if(score == brickRowCount * brickColumnCount * brickOutPoint* stage){ //이렇게 하면 처음부터 0인 경우는 어떻게 하지
             alert("You Win! Your Score : "+score);
 
-             document.location.reload();
+              stage++;
+              init();
+              initBricks(stage); //벽돌
+            // draw(stage);
           }
         }
         changeBall();
@@ -257,4 +303,4 @@ requestAnimationFrame(draw);
 
 
 
-draw();
+draw(stage);
